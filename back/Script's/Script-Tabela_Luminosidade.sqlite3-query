@@ -1,0 +1,9 @@
+-- database: ../db.sqlite3
+
+SELECT * FROM app_smart_luminosidadedata;
+
+-- Exclui os registros que inserimos como testes
+DELETE from app_smart_luminosidadedata where id > 0;
+
+-- Reinicia a sequência de ID's, começando no id=1 novamente
+DELETE FROM sqlite_sequence WHERE name='app_smart_luminosidadedata';

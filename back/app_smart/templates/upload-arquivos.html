@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Upload de Arquivo CSV</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f4f4f4;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        height: 100vh;
+      }
+
+      nav {
+        margin-top: 200px;
+        background-color: #ffffff;
+        width: 30%;
+        padding: 10px 0;
+        display: flex;
+        justify-content: center;
+        margin-bottom: 20px;
+        border-radius: 5px;
+      }
+
+      nav a {
+        color: rgb(0, 179, 0);
+        text-decoration: none;
+        margin: 0 10px;
+        padding: 5px 2px;
+        border-radius: 5px;
+        font-family: "Courier New", Courier, monospace;
+        position: relative;
+        font-weight: bold;
+      }
+
+      nav a.active {
+            text-decoration: underline; /* Adicionar sublinhado para o link ativo */
+            font-weight: bold; /* Opcional: adicionar peso ao texto do link ativo */
+      }
+
+      nav a.active::after,
+      nav a:hover::after {
+        content: "";
+        position: absolute;
+        width: 100%;
+        height: 2px;
+        background-color: rgb(0, 168, 76);
+        bottom: -5px;
+        left: 0;
+        transform: scaleX(1);
+      }
+
+      nav a::after {
+        content: "";
+        position: absolute;
+        width: 100%;
+        height: 2px;
+        background-color: rgb(0, 168, 76);
+        bottom: -5px;
+        left: 0;
+        transform: scaleX(0);
+        transition: transform 0.3s ease;
+      }
+
+      nav a:hover::after {
+        transform: scaleX(1); /* Aparece ao passar o mouse */
+      }
+
+      .form-container {
+        background-color: #fff;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        width: 320px;
+        text-align: center;
+        max-width: 100%;
+        margin: 0 auto;
+        height: 450px;
+      }
+
+      h1 {
+        font-size: 24px;
+        margin-bottom: 20px;
+        color: #2e2e2e;
+      }
+
+      h2 {
+        font-size: 18px;
+        margin-bottom: 10px;
+        color: #2e2e2e;
+      }
+
+      #file-names {
+        list-style-type: none;
+        padding: 0;
+        margin: 0;
+        color: #6e6e6e;
+      }
+
+      .file-upload {
+        margin-bottom: 15px;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+        color: #525252;
+      }
+
+      /* Estilos da animação de upload */
+      .containerinput {
+        --transition: 350ms;
+        --folder-W: 120px;
+        --folder-H: 80px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-end;
+        padding: 10px;
+        background: linear-gradient(135deg, #00a151, #08ec7a);
+        border-radius: 15px;
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+        height: calc(var(--folder-H) * 1.7);
+        position: relative;
+        margin-top: 55px;
+        margin-bottom: 20px;
+      }
+
+      .folder {
+        position: absolute;
+        top: -20px;
+        left: calc(50% - 60px);
+        animation: float 2.5s infinite ease-in-out;
+        transition: transform var(--transition) ease;
+      }
+
+      .folder:hover {
+        transform: scale(1.05);
+      }
+
+      .folder .front-side,
+      .folder .back-side {
+        position: absolute;
+        transition: transform var(--transition);
+        transform-origin: bottom center;
+      }
+
+      .folder .back-side::before,
+      .folder .back-side::after {
+        content: "";
+        display: block;
+        background-color: white;
+        opacity: 0.5;
+        z-index: 0;
+        width: var(--folder-W);
+        height: var(--folder-H);
+        position: absolute;
+        transform-origin: bottom center;
+        border-radius: 15px;
+        transition: transform 350ms;
+        z-index: 0;
+      }
+
+      .containerinput:hover .back-side::before {
+        transform: rotateX(-5deg) skewX(5deg);
+      }
+      .containerinput:hover .back-side::after {
+        transform: rotateX(-15deg) skewX(12deg);
+      }
+
+      .folder .front-side {
+        z-index: 1;
+      }
+
+      .containerinput:hover .front-side {
+        transform: rotateX(-40deg) skewX(15deg);
+      }
+
+      .folder .tip {
+        background: linear-gradient(135deg, #ff9a56, #ff6f56);
+        width: 80px;
+        height: 20px;
+        border-radius: 12px 12px 0 0;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        position: absolute;
+        top: -10px;
+        z-index: 2;
+      }
+
+      .folder .cover {
+        background: linear-gradient(135deg, #ffe563, #ffc663);
+        width: var(--folder-W);
+        height: var(--folder-H);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+        border-radius: 10px;
+      }
+
+      .custom-file-upload {
+        font-size: 1.1em;
+        color: #ffffff;
+        text-align: center;
+        background: rgba(255, 255, 255, 0.2);
+        border: none;
+        border-radius: 10px;
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        cursor: pointer;
+        transition: background var(--transition) ease;
+        display: inline-block;
+        width: 80%;
+        padding: 10px 35px;
+        position: relative;
+      }
+
+      .custom-file-upload:hover {
+        background: rgba(255, 255, 255, 0.4);
+      }
+
+      .custom-file-upload input[type="file"] {
+        display: none;
+      }
+
+      @keyframes float {
+        0% {
+          transform: translateY(0px);
+        }
+
+        50% {
+          transform: translateY(-20px);
+        }
+
+        100% {
+          transform: translateY(0px);
+        }
+      }
+
+      .cta {
+        border: none;
+        background: none;
+        cursor: pointer;
+        position: relative;
+        display: inline-block;
+        padding: 10px 20px;
+        font-size: 16px;
+        font-weight: 500;
+        color: #ffffff;
+        border-radius: 10px;
+        margin-top: 20px;
+      }
+
+      .cta span {
+        padding-bottom: 7px;
+        letter-spacing: 4px;
+        font-size: 14px;
+        padding-right: 15px;
+        text-transform: uppercase;
+      }
+
+      .cta svg {
+        transform: translateX(-8px);
+        transition: all 0.3s ease;
+      }
+
+      .cta:hover svg {
+        transform: translateX(0);
+      }
+
+      .cta:active svg {
+        transform: scale(0.9);
+      }
+
+      .hover-underline-animation {
+        position: relative;
+        color: black;
+        padding-bottom: 20px;
+      }
+
+      .hover-underline-animation:after {
+        content: "";
+        position: absolute;
+        width: 100%;
+        transform: scaleX(0);
+        height: 2px;
+        bottom: 0;
+        left: 0;
+        background-color: #000000;
+        transform-origin: bottom right;
+        transition: transform 0.25s ease-out;
+      }
+
+      .cta:hover .hover-underline-animation:after {
+        transform: scaleX(1);
+        transform-origin: bottom left;
+      }
+    </style>
+  </head>
+  <body>
+    <nav>
+      <a
+        href="http://127.0.0.1:8000/upload/sensores/"
+        onclick="showForm('sensores'); return false"
+        >Sensores</a
+      >
+      <a
+        href="http://127.0.0.1:8000/upload/temperatura/"
+        onclick="showForm('temperatura'); return false"
+        >Temperatura</a
+      >
+      <a
+        href="http://127.0.0.1:8000/upload/umidade/"
+        onclick="showForm('umidade'); return false"
+        >Umidade</a
+      >
+      <a
+        href="http://127.0.0.1:8000/upload/luminosidade/"
+        onclick="showForm('luminosidade'); return false"
+        >Luminosidade</a
+      >
+      <a
+        href="http://127.0.0.1:8000/upload/contador/"
+        onclick="showForm('contador'); return false"
+        >Contador</a
+      >
+    </nav>
+
+    <div class="form-container" id="sensores-form">
+      <h1>Upload de Arquivo de Sensores</h1>
+      <form method="POST" enctype="multipart/form-data" action="{% url 'upload_sensores' %}">
+        {% csrf_token %}
+        <div class="file-upload">
+          <label for="file-sensores">Escolha um arquivo CSV</label>
+          <div class="containerinput">
+            <div class="folder">
+              <div class="front-side">
+                <div class="tip"></div>
+                <div class="cover"></div>
+              </div>
+              <div class="back-side cover"></div>
+            </div>
+            <label class="custom-file-upload">
+              <input
+                class="title"
+                type="file"
+                id="file"
+                name="file"
+                accept=".csv"
+                required
+                onchange="updateFileList()"
+              />
+              Escolher arquivo
+            </label>
+          </div>
+        </div>
+        <div class="file-list" id="file-list">
+          <h2>Arquivo Selecionado:</h2>
+          <ul id="file-names"></ul>
+        </div>
+        <button type="submit" class="cta">
+          <span class="hover-underline-animation">Enviar</span>
+          <svg
+            id="arrow-horizontal"
+            xmlns="http://www.w3.org/2000/svg"
+            width="30"
+            height="10"
+            viewBox="0 0 46 16"
+          >
+            <path
+              id="Path_10"
+              data-name="Path 10"
+              d="M8,0,6.545,1.455l5.506,5.506H-30V9.039H12.052L6.545,14.545,8,16l8-8Z"
+              transform="translate(30)"
+            ></path>
+          </svg>
+        </button>
+      </form>
+    </div>
+
+    <div class="form-container" id="temperatura-form" style="display: none">
+      <h1>Upload de Arquivo de Temperatura</h1>
+      <form method="POST" enctype="multipart/form-data" action="{% url 'upload_temperatura' %}">
+        {% csrf_token %}
+        <div class="file-upload">
+          <label for="file-temperatura">Escolha um arquivo CSV</label>
+          <div class="containerinput">
+            <div class="folder">
+              <div class="front-side">
+                <div class="tip"></div>
+                <div class="cover"></div>
+              </div>
+              <div class="back-side cover"></div>
+            </div>
+            <label class="custom-file-upload">
+              <input
+                class="title"
+                type="file"
+                id="file"
+                name="file"
+                accept=".csv"
+                required
+                onchange="updateFileList()"
+              />
+              Escolher arquivo
+            </label>
+          </div>
+        </div>
+        <div class="file-list" id="file-list">
+          <h2>Arquivo Selecionado:</h2>
+          <ul id="file-names"></ul>
+        </div>
+        <button type="submit" class="cta">
+          <span class="hover-underline-animation">Enviar</span>
+          <svg
+            id="arrow-horizontal"
+            xmlns="http://www.w3.org/2000/svg"
+            width="30"
+            height="10"
+            viewBox="0 0 46 16"
+          >
+            <path
+              id="Path_10"
+              data-name="Path 10"
+              d="M8,0,6.545,1.455l5.506,5.506H-30V9.039H12.052L6.545,14.545,8,16l8-8Z"
+              transform="translate(30)"
+            ></path>
+          </svg>
+        </button>
+      </form>
+    </div>
+
+    <div class="form-container" id="umidade-form" style="display: none">
+      <h1>Upload de Arquivo de Umidade</h1>
+      <form method="POST" enctype="multipart/form-data" action="{% url 'upload_umidade' %}">
+        {% csrf_token %}
+        <div class="file-upload">
+          <label for="file-umidade">Escolha um arquivo CSV</label>
+          <div class="containerinput">
+            <div class="folder">
+              <div class="front-side">
+                <div class="tip"></div>
+                <div class="cover"></div>
+              </div>
+              <div class="back-side cover"></div>
+            </div>
+            <label class="custom-file-upload">
+              <input
+                class="title"
+                type="file"
+                id="file"
+                name="file"
+                accept=".csv"
+                required
+                onchange="updateFileList()"
+              />
+              Escolher arquivo
+            </label>
+          </div>
+        </div>
+        <div class="file-list" id="file-list">
+          <h2>Arquivo Selecionado:</h2>
+          <ul id="file-names"></ul>
+        </div>
+        <button type="submit" class="cta">
+          <span class="hover-underline-animation">Enviar</span>
+          <svg
+            id="arrow-horizontal"
+            xmlns="http://www.w3.org/2000/svg"
+            width="30"
+            height="10"
+            viewBox="0 0 46 16"
+          >
+            <path
+              id="Path_10"
+              data-name="Path 10"
+              d="M8,0,6.545,1.455l5.506,5.506H-30V9.039H12.052L6.545,14.545,8,16l8-8Z"
+              transform="translate(30)"
+            ></path>
+          </svg>
+        </button>
+      </form>
+    </div>
+
+    <div class="form-container" id="luminosidade-form" style="display: none">
+      <h1>Upload de Arquivo de Luminosidade</h1>
+      <form method="POST" enctype="multipart/form-data" action="{% url 'upload_luminosidade' %}">
+        {% csrf_token %}
+        <div class="file-upload">
+          <label for="file-luminosidade">Escolha um arquivo CSV</label>
+          <div class="containerinput">
+            <div class="folder">
+              <div class="front-side">
+                <div class="tip"></div>
+                <div class="cover"></div>
+              </div>
+              <div class="back-side cover"></div>
+            </div>
+            <label class="custom-file-upload">
+              <input
+                class="title"
+                type="file"
+                id="file"
+                name="file"
+                accept=".csv"
+                required
+                onchange="updateFileList()"
+              />
+              Escolher arquivo
+            </label>
+          </div>
+        </div>
+        <div class="file-list" id="file-list">
+          <h2>Arquivo Selecionado:</h2>
+          <ul id="file-names"></ul>
+        </div>
+        <button type="submit" class="cta">
+          <span class="hover-underline-animation">Enviar</span>
+          <svg
+            id="arrow-horizontal"
+            xmlns="http://www.w3.org/2000/svg"
+            width="30"
+            height="10"
+            viewBox="0 0 46 16"
+          >
+            <path
+              id="Path_10"
+              data-name="Path 10"
+              d="M8,0,6.545,1.455l5.506,5.506H-30V9.039H12.052L6.545,14.545,8,16l8-8Z"
+              transform="translate(30)"
+            ></path>
+          </svg>
+        </button>
+      </form>
+    </div>
+
+    <div class="form-container" id="contador-form" style="display: none">
+      <h1>Upload de Arquivo de Contador</h1>
+      <form method="POST" enctype="multipart/form-data" action="{% url 'upload_contador' %}">
+        {% csrf_token %}
+        <div class="file-upload">
+          <label for="file-contador">Escolha um arquivo CSV</label>
+          <div class="containerinput">
+            <div class="folder">
+              <div class="front-side">
+                <div class="tip"></div>
+                <div class="cover"></div>
+              </div>
+              <div class="back-side cover"></div>
+            </div>
+            <label class="custom-file-upload">
+              <input
+                class="title"
+                type="file"
+                id="file"
+                name="file"
+                accept=".csv"
+                required
+                onchange="updateFileList()"
+              />
+              Escolher arquivo
+            </label>
+          </div>
+        </div>
+        <div class="file-list" id="file-list">
+          <h2>Arquivo Selecionado:</h2>
+          <ul id="file-names"></ul>
+        </div>
+        <button type="submit" class="cta">
+          <span class="hover-underline-animation">Enviar</span>
+          <svg
+            id="arrow-horizontal"
+            xmlns="http://www.w3.org/2000/svg"
+            width="30"
+            height="10"
+            viewBox="0 0 46 16"
+          >
+            <path
+              id="Path_10"
+              data-name="Path 10"
+              d="M8,0,6.545,1.455l5.506,5.506H-30V9.039H12.052L6.545,14.545,8,16l8-8Z"
+              transform="translate(30)"
+            ></path>
+          </svg>
+        </button>
+      </form>
+    </div>
+
+    
+
+    <script>
+      function updateFileList() {
+        const fileInput = document.getElementById("file");
+        const fileNamesList = document.getElementById("file-names");
+        fileNamesList.innerHTML = ""; // Limpa a lista existente
+
+        const files = fileInput.files;
+        for (let i = 0; i < files.length; i++) {
+          const listItem = document.createElement("li");
+          listItem.textContent = "📁" + files[i].name; // Adiciona o nome do arquivo
+          fileNamesList.appendChild(listItem); // Adiciona o item à lista
+        }
+      }
+
+      const forms = {
+        sensores: document.getElementById("sensores-form"),
+        temperatura: document.getElementById("temperatura-form"),
+        umidade: document.getElementById("umidade-form"),
+        luminosidade: document.getElementById("luminosidade-form"),
+        contador: document.getElementById("contador-form"),
+      };
+
+      function showForm(formId) {
+            // Oculta todos os formulários
+            for (let key in forms) {
+                forms[key].style.display = 'none';
+            }
+
+            // Mostra o formulário correto
+            forms[formId].style.display = 'block';
+
+            // Atualiza a classe 'active' no link da barra de navegação correspondente
+            setActiveLink(formId);
+
+            // Atualiza a URL sem recarregar a página
+            const newUrl = `http://127.0.0.1:8000/upload/${formId}/`;
+            window.history.pushState({ formId }, '', newUrl);
+        }
+
+        // Função para definir o link ativo baseado no ID do formulário
+        function setActiveLink(activeFormId) {
+            const links = document.querySelectorAll('nav a');
+            links.forEach(link => {
+                const linkHref = link.getAttribute('href'); // Obtém o href do link
+                if (linkHref === `http://127.0.0.1:8000/upload/${activeFormId}/`) {
+                    link.classList.add('active');
+                } else {
+                    link.classList.remove('active');
+                }
+            });
+        }
+
+        // Função para definir o link ativo quando a página é carregada
+        function setActiveLinkOnLoad() {
+            const currentUrl = window.location.href; // Obtém a URL atual
+            const formId = currentUrl.split('/').pop(); // Pega o último segmento da URL
+
+            // Verifica se o formId é válido e chama setActiveLink
+            if (formId in forms) {
+                setActiveLink(formId);
+                showForm(formId); // Mostra o formulário correspondente
+            }
+        }
+
+        // Chama a função ao carregar a página
+        window.onload = setActiveLinkOnLoad;
+    </script>
+  </body>
+</html>
